@@ -118,6 +118,7 @@ class PPOTrainer:
             pretrained_backbone=config.PRETRAINED_BACKBONE,
         ).to(self.device)
         self._load_checkpoint_if_requested()
+        self._configure_trainable_parameters()
         self.optimizer = self._build_optimizer()
         self.model = maybe_compile(self.policy, config, self.device)
 
@@ -177,24 +178,46 @@ class PPOTrainer:
         else:
             self.policy.load_state_dict(strip_compile_prefix(checkpoint))
 
+    def _configure_trainable_parameters(self) -> None:
+        if self.config.model_name == "TemporalResNetGRU" and self.config.FREEZE_RESNET:
+            for name, param in self.policy.named_parameters():
+                if name.startswith("backbone."):
+                    param.requires_grad = False
+
+        trainable = sum(p.numel() for p in self.policy.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.policy.parameters())
+        frozen = total - trainable
+        if frozen:
+            print(
+                f"Frozen parameters: {frozen:,}; "
+                f"trainable parameters: {trainable:,}."
+            )
+
     def _build_optimizer(self) -> optim.Optimizer:
         backbone_lr = self.config.BACKBONE_LEARNING_RATE
         if backbone_lr is None or not hasattr(self.policy, "backbone"):
-            optimizer = optim.Adam(self.policy.parameters(), lr=self.config.LEARNING_RATE)
+            trainable_params = [
+                param for param in self.policy.parameters() if param.requires_grad
+            ]
+            optimizer = optim.Adam(trainable_params, lr=self.config.LEARNING_RATE)
         else:
             backbone_params = []
             head_params = []
             for name, param in self.policy.named_parameters():
+                if not param.requires_grad:
+                    continue
                 if name.startswith("backbone."):
                     backbone_params.append(param)
                 else:
                     head_params.append(param)
-            optimizer = optim.Adam(
-                [
-                    {"params": backbone_params, "lr": backbone_lr},
-                    {"params": head_params, "lr": self.config.LEARNING_RATE},
-                ]
-            )
+            param_groups = []
+            if backbone_params:
+                param_groups.append({"params": backbone_params, "lr": backbone_lr})
+            if head_params:
+                param_groups.append(
+                    {"params": head_params, "lr": self.config.LEARNING_RATE}
+                )
+            optimizer = optim.Adam(param_groups)
 
         if self.checkpoint_optimizer_state:
             try:

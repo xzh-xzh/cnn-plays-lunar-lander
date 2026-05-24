@@ -28,6 +28,7 @@ class TrainingConfig:
     # Model
     model_name: str = "TinyCNNGRU"
     PRETRAINED_BACKBONE: bool = False
+    FREEZE_RESNET: bool = True
     HIDDEN_SIZE: int = 256
     GRU_LAYERS: int = 1
 
