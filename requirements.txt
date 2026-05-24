@@ -1,0 +1,8 @@
+gymnasium[box2d]>=1.2.2
+mlflow>=3.0
+numpy>=1.26
+opencv-python>=4.12
+pyyaml>=6.0
+swig>=4.4.0
+torch>=2.7
+torchvision>=0.22
