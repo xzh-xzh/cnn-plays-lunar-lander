@@ -56,4 +56,6 @@ D:\xzh\anaconda3\envs\rl\python.exe train.py --config configs\smoke.yaml --mlflo
 
 `USE_TORCH_COMPILE` 默认关闭。当前 Windows 环境下 PyTorch Inductor 需要可用的 Triton；如果环境里没有 Triton，开启后会在第一次 compiled forward 时失败。
 
+`TemporalResNetGRU` 默认使用 ImageNet 预训练 ResNet18。首次运行时，如果本机或服务器没有缓存 torchvision 权重，会自动下载一次。
+
 如果只是确认项目能跑，请先使用 `configs/smoke.yaml`。如果要长时间训练，再使用 `configs/temporal_resnet_gru.yaml` 并根据显存调整 `NUM_ENVS`、`BATCH_SIZE` 和 `NUM_STEPS_PER_ROLLOUT`。
