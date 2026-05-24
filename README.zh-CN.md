@@ -58,4 +58,6 @@ D:\xzh\anaconda3\envs\rl\python.exe train.py --config configs\smoke.yaml --mlflo
 
 `TemporalResNetGRU` 默认使用 ImageNet 预训练 ResNet18。首次运行时，如果本机或服务器没有缓存 torchvision 权重，会自动下载一次。
 
+ResNet backbone 默认冻结，也就是配置里的 `FREEZE_RESNET: true`。训练时只更新后面的 GRU、归一化层和 actor/critic 头部。如果要微调整个 ResNet，把 `FREEZE_RESNET` 改成 `false`，并给 `BACKBONE_LEARNING_RATE` 设置一个较小学习率。
+
 如果只是确认项目能跑，请先使用 `configs/smoke.yaml`。如果要长时间训练，再使用 `configs/temporal_resnet_gru.yaml` 并根据显存调整 `NUM_ENVS`、`BATCH_SIZE` 和 `NUM_STEPS_PER_ROLLOUT`。
